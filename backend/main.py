@@ -6,6 +6,14 @@ from typing import Optional
 from datetime import datetime
 import sys
 import os
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from fastapi import Request
+limiter = Limiter(key_func=get_remote_address)
+app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from database.connection import get_db
