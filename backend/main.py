@@ -2,18 +2,20 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from typing import Optional
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from database.connection import get_db
-from database.models import Empresa
+from database.models import Empresa, Funcionario
 from backend.security import criptografar_senha, verificar_senha
 from backend.auth import criar_token, verificar_token
 
 app = FastAPI()
 oauth2 = OAuth2PasswordBearer(tokenUrl="login")
 
+# Schemas
 class EmpresaSchema(BaseModel):
     nome: str
     email: str
@@ -24,6 +26,23 @@ class LoginSchema(BaseModel):
     email: str
     senha: str
 
+class FuncionarioSchema(BaseModel):
+    nome: str
+    email: str
+    senha: str
+    setor: Optional[str] = None
+
+# Função que pega empresa logada
+def get_empresa_atual(token: str = Depends(oauth2), db: Session = Depends(get_db)):
+    payload = verificar_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Token invalido")
+    empresa = db.query(Empresa).filter(Empresa.email == payload["sub"]).first()
+    if not empresa:
+        raise HTTPException(status_code=404, detail="Empresa nao encontrada")
+    return empresa
+
+# Rotas
 @app.get("/")
 def home():
     return {"mensagem": "GestaCont online!"}
@@ -49,8 +68,32 @@ def login(dados: LoginSchema, db: Session = Depends(get_db)):
     return {"token": token, "tipo": "bearer"}
 
 @app.get("/painel")
-def painel(token: str = Depends(oauth2)):
-    payload = verificar_token(token)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Token invalido")
-    return {"mensagem": f"Bem vindo ao painel!", "email": payload["sub"]}
+def painel(empresa: Empresa = Depends(get_empresa_atual)):
+    return {"mensagem": f"Bem vindo, {empresa.nome}!"}
+
+@app.post("/funcionario/cadastrar")
+def cadastrar_funcionario(
+    dados: FuncionarioSchema,
+    db: Session = Depends(get_db),
+    empresa: Empresa = Depends(get_empresa_atual)
+):
+    funcionario = Funcionario(
+        empresa_id=empresa.id,
+        nome=dados.nome,
+        email=dados.email,
+        senha=criptografar_senha(dados.senha),
+        setor=dados.setor
+    )
+    db.add(funcionario)
+    db.commit()
+    return {"mensagem": f"Funcionario {dados.nome} cadastrado com sucesso!"}
+
+@app.get("/funcionarios")
+def listar_funcionarios(
+    db: Session = Depends(get_db),
+    empresa: Empresa = Depends(get_empresa_atual)
+):
+    funcionarios = db.query(Funcionario).filter(
+        Funcionario.empresa_id == empresa.id
+    ).all()
+    return [{"id": f.id, "nome": f.nome, "email": f.email, "setor": f.setor, "ativo": f.ativo} for f in funcionarios]
