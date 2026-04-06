@@ -121,3 +121,42 @@ def concluir_tarefa(tarefa_id: int, db: Session = Depends(get_db), empresa: Empr
     tarefa.concluida = True
     db.commit()
     return {"mensagem": f"Tarefa '{tarefa.titulo}' concluida!"}
+@app.get("/dashboard")
+def dashboard(db: Session = Depends(get_db), empresa: Empresa = Depends(get_empresa_atual)):
+    funcionarios = db.query(Funcionario).filter(Funcionario.empresa_id == empresa.id).all()
+    
+    relatorio = []
+    for f in funcionarios:
+        total = db.query(Tarefa).filter(Tarefa.funcionario_id == f.id).count()
+        concluidas = db.query(Tarefa).filter(Tarefa.funcionario_id == f.id, Tarefa.concluida == True).count()
+        pendentes = total - concluidas
+        desempenho = round((concluidas / total * 100), 1) if total > 0 else 0
+        
+        relatorio.append({
+            "funcionario": f.nome,
+            "setor": f.setor,
+            "total_tarefas": total,
+            "concluidas": concluidas,
+            "pendentes": pendentes,
+            "desempenho": f"{desempenho}%"
+        })
+    
+    return {
+        "empresa": empresa.nome,
+        "total_funcionarios": len(funcionarios),
+        "relatorio": relatorio
+    }
+
+@app.get("/tarefas/atrasadas")
+def tarefas_atrasadas(db: Session = Depends(get_db), empresa: Empresa = Depends(get_empresa_atual)):
+    agora = datetime.utcnow()
+    atrasadas = db.query(Tarefa).filter(
+        Tarefa.empresa_id == empresa.id,
+        Tarefa.concluida == False,
+        Tarefa.prazo < agora
+    ).all()
+    
+    return {
+        "total_atrasadas": len(atrasadas),
+        "tarefas": [{"id": t.id, "titulo": t.titulo, "prazo": t.prazo, "funcionario_id": t.funcionario_id} for t in atrasadas]
+    }
