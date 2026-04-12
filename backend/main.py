@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, Request
+from backend.feed import buscar_noticias
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -166,3 +167,6 @@ def tarefas_atrasadas(db: Session = Depends(get_db), empresa: Empresa = Depends(
         Tarefa.prazo < agora
     ).all()
     return {"total_atrasadas": len(atrasadas), "tarefas": [{"id": t.id, "titulo": t.titulo, "prazo": t.prazo, "funcionario_id": t.funcionario_id} for t in atrasadas]}
+@app.get("/noticias")
+def noticias():
+    return {"noticias": buscar_noticias()}
