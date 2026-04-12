@@ -1,19 +1,15 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
-import sys
-import os
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from fastapi import Request
-limiter = Limiter(key_func=get_remote_address)
-app = FastAPI()
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+import sys
+import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from database.connection import get_db
@@ -21,7 +17,18 @@ from database.models import Empresa, Funcionario, Tarefa
 from backend.security import criptografar_senha, verificar_senha
 from backend.auth import criar_token, verificar_token
 
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 oauth2 = OAuth2PasswordBearer(tokenUrl="login")
 
 class EmpresaSchema(BaseModel):
@@ -73,7 +80,8 @@ def cadastrar_empresa(dados: EmpresaSchema, db: Session = Depends(get_db)):
     return {"mensagem": "Empresa cadastrada com sucesso!"}
 
 @app.post("/login")
-def login(dados: LoginSchema, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login(request: Request, dados: LoginSchema, db: Session = Depends(get_db)):
     empresa = db.query(Empresa).filter(Empresa.email == dados.email).first()
     if not empresa or not verificar_senha(dados.senha, empresa.senha):
         raise HTTPException(status_code=401, detail="Email ou senha incorretos")
@@ -114,7 +122,7 @@ def criar_tarefa(dados: TarefaSchema, db: Session = Depends(get_db), empresa: Em
     )
     db.add(tarefa)
     db.commit()
-    return {"mensagem": f"Tarefa '{dados.titulo}' criada com sucesso!"}
+    return {"mensagem": f"Tarefa '{dados.titulo}' criada!"}
 
 @app.get("/tarefas")
 def listar_tarefas(db: Session = Depends(get_db), empresa: Empresa = Depends(get_empresa_atual)):
@@ -129,17 +137,16 @@ def concluir_tarefa(tarefa_id: int, db: Session = Depends(get_db), empresa: Empr
     tarefa.concluida = True
     db.commit()
     return {"mensagem": f"Tarefa '{tarefa.titulo}' concluida!"}
+
 @app.get("/dashboard")
 def dashboard(db: Session = Depends(get_db), empresa: Empresa = Depends(get_empresa_atual)):
     funcionarios = db.query(Funcionario).filter(Funcionario.empresa_id == empresa.id).all()
-    
     relatorio = []
     for f in funcionarios:
         total = db.query(Tarefa).filter(Tarefa.funcionario_id == f.id).count()
         concluidas = db.query(Tarefa).filter(Tarefa.funcionario_id == f.id, Tarefa.concluida == True).count()
         pendentes = total - concluidas
         desempenho = round((concluidas / total * 100), 1) if total > 0 else 0
-        
         relatorio.append({
             "funcionario": f.nome,
             "setor": f.setor,
@@ -148,12 +155,7 @@ def dashboard(db: Session = Depends(get_db), empresa: Empresa = Depends(get_empr
             "pendentes": pendentes,
             "desempenho": f"{desempenho}%"
         })
-    
-    return {
-        "empresa": empresa.nome,
-        "total_funcionarios": len(funcionarios),
-        "relatorio": relatorio
-    }
+    return {"empresa": empresa.nome, "total_funcionarios": len(funcionarios), "relatorio": relatorio}
 
 @app.get("/tarefas/atrasadas")
 def tarefas_atrasadas(db: Session = Depends(get_db), empresa: Empresa = Depends(get_empresa_atual)):
@@ -163,8 +165,4 @@ def tarefas_atrasadas(db: Session = Depends(get_db), empresa: Empresa = Depends(
         Tarefa.concluida == False,
         Tarefa.prazo < agora
     ).all()
-    
-    return {
-        "total_atrasadas": len(atrasadas),
-        "tarefas": [{"id": t.id, "titulo": t.titulo, "prazo": t.prazo, "funcionario_id": t.funcionario_id} for t in atrasadas]
-    }
+    return {"total_atrasadas": len(atrasadas), "tarefas": [{"id": t.id, "titulo": t.titulo, "prazo": t.prazo, "funcionario_id": t.funcionario_id} for t in atrasadas]}
