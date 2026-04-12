@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+sqlalchemy
+passlib
+python-jose
+slowapi
+feedparser
+pydantic
+python-multipart
+bcrypt
