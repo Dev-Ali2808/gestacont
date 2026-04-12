@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GestaCont — Gestão Inteligente para Contabilidade</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c10;
+    --surface: #0d1117;
+    --surface2: #161b22;
+    --border: #21262d;
+    --accent: #00e5a0;
+    --accent2: #0097ff;
+    --text: #e6edf3;
+    --muted: #7d8590;
+    --danger: #ff4757;
+    --warning: #ffa502;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+
+  /* GRID BACKGROUND */
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(8,12,16,0.8);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: -0.5px;
+  }
+
+  .logo span { color: var(--accent); }
+
+  nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+    margin-left: 32px;
+  }
+
+  nav a:hover { color: var(--text); }
+
+  .btn-nav {
+    background: var(--accent);
+    color: var(--bg) !important;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: opacity 0.2s !important;
+  }
+
+  .btn-nav:hover { opacity: 0.85; }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 20px 80px;
+    z-index: 1;
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(0,229,160,0.08) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,229,160,0.1);
+    border: 1px solid rgba(0,229,160,0.2);
+    color: var(--accent);
+    padding: 6px 16px;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-bottom: 28px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+
+  h1 .highlight {
+    color: var(--accent);
+    position: relative;
+  }
+
+  .hero p {
+    font-size: 1.15rem;
+    color: var(--muted);
+    max-width: 520px;
+    margin: 0 auto 40px;
+    line-height: 1.7;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .hero-btns {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 14px 32px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,229,160,0.3); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 14px 32px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* STATS */
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    margin-top: 80px;
+    flex-wrap: wrap;
+    animation: fadeUp 0.6s 0.4s ease both;
+  }
+
+  .stat-item { text-align: center; }
+
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+  }
+
+  .stat-label { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
+
+  /* FEATURES */
+  .section {
+    position: relative;
+    z-index: 1;
+    padding: 100px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-tag {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 3vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+
+  .section-sub {
+    color: var(--muted);
+    font-size: 1rem;
+    max-width: 480px;
+    line-height: 1.7;
+    margin-bottom: 60px;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .feature-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .feature-card:hover { border-color: rgba(0,229,160,0.3); transform: translateY(-4px); }
+  .feature-card:hover::before { opacity: 1; }
+
+  .feature-icon {
+    width: 44px;
+    height: 44px;
+    background: rgba(0,229,160,0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+  }
+
+  .feature-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .feature-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+
+  /* PRICING */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .price-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 28px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+
+  .price-card.featured {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(0,229,160,0.05), var(--surface));
+    transform: scale(1.03);
+  }
+
+  .price-tag {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--bg);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+  }
+
+  .price-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .price-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    margin: 20px 0 8px;
+  }
+
+  .price-value span { font-size: 1rem; color: var(--muted); font-weight: 400; }
+
+  .price-features { list-style: none; margin: 24px 0; text-align: left; }
+
+  .price-features li {
+    padding: 8px 0;
+    font-size: 0.9rem;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .price-features li::before { content: '✓'; color: var(--accent); font-weight: 700; }
+
+  /* LOGIN MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+    animation: scaleIn 0.3s ease;
+  }
+
+  .modal h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+
+  .modal p { color: var(--muted); font-size: 0.9rem; margin-bottom: 28px; }
+
+  .form-group { margin-bottom: 16px; }
+
+  .form-group label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 8px; }
+
+  .form-group input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .form-group input:focus { border-color: var(--accent); }
+
+  .btn-full {
+    width: 100%;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.2s;
+  }
+
+  .btn-full:hover { opacity: 0.85; }
+
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  /* DASHBOARD */
+  #dashboard {
+    display: none;
+    min-height: 100vh;
+    background: var(--bg);
+  }
+
+  .dash-nav {
+    padding: 16px 32px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .dash-content { padding: 32px; max-width: 1400px; margin: 0 auto; }
+
+  .dash-header { margin-bottom: 32px; }
+
+  .dash-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .dash-header p { color: var(--muted); margin-top: 4px; }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .kpi-card:nth-child(1) { animation-delay: 0.1s; }
+  .kpi-card:nth-child(2) { animation-delay: 0.2s; }
+  .kpi-card:nth-child(3) { animation-delay: 0.3s; }
+  .kpi-card:nth-child(4) { animation-delay: 0.4s; }
+
+  .kpi-label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+
+  .kpi-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .kpi-change { font-size: 0.8rem; }
+  .kpi-change.up { color: var(--accent); }
+  .kpi-change.down { color: var(--danger); }
+
+  .dash-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .dash-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+
+  .dash-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .dash-card h3 span { font-size: 0.75rem; color: var(--muted); font-family: 'DM Sans'; font-weight: 400; }
+
+  /* PERFORMANCE BAR */
+  .perf-item { margin-bottom: 16px; }
+  .perf-header { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem; }
+  .perf-bar { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .perf-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 1s ease; }
+  .perf-fill.medium { background: var(--warning); }
+  .perf-fill.low { background: var(--danger); }
+
+  /* TAREFAS */
+  .tarefa-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.88rem;
+  }
+
+  .tarefa-item:last-child { border: none; }
+
+  .tarefa-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .tarefa-status.done { background: var(--accent); }
+  .tarefa-status.pending { background: var(--warning); }
+  .tarefa-status.late { background: var(--danger); }
+
+  .tarefa-name { flex: 1; }
+  .tarefa-meta { color: var(--muted); font-size: 0.8rem; }
+
+  /* NOTICIAS */
+  .noticia-item {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .noticia-item:last-child { border: none; }
+
+  .noticia-fonte { font-size: 0.75rem; color: var(--accent); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+  .noticia-titulo { font-size: 0.88rem; line-height: 1.4; margin-bottom: 4px; }
+
+  .noticia-data { font-size: 0.75rem; color: var(--muted); }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 1;
+    padding: 60px 40px 30px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  footer .logo { display: block; margin-bottom: 16px; font-size: 1.2rem; }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    nav { padding: 16px 20px; }
+    nav .nav-links { display: none; }
+    .section { padding: 60px 20px; }
+    .dash-grid { grid-template-columns: 1fr; }
+    .dash-content { padding: 20px; }
+    .stats { gap: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<!-- LANDING PAGE -->
+<div id="landing">
+
+  <nav>
+    <div class="logo">Gesta<span>Cont</span></div>
+    <div class="nav-links">
+      <a href="#features">Funcionalidades</a>
+      <a href="#pricing">Planos</a>
+      <a href="#" onclick="openLogin()">Entrar</a>
+      <a href="#" class="btn-nav" onclick="openLogin()">Começar grátis</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div>
+      <div class="badge">Novo · Gestão contábil inteligente</div>
+      <h1>Controle total<br>do seu <span class="highlight">escritório</span></h1>
+      <p>Gerencie tarefas, equipes e desempenho em um só lugar. Feito por quem entende de contabilidade.</p>
+      <div class="hero-btns">
+        <button class="btn-primary" onclick="openLogin()">Acessar plataforma</button>
+        <button class="btn-secondary" onclick="showDemo()">Ver demonstração</button>
+      </div>
+      <div class="stats">
+        <div class="stat-item">
+          <span class="stat-num">+40%</span>
+          <div class="stat-label">Produtividade média</div>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">100%</span>
+          <div class="stat-label">Dados criptografados</div>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">0</span>
+          <div class="stat-label">Instalação necessária</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="section-tag">Funcionalidades</div>
+    <h2 class="section-title">Tudo que seu escritório precisa</h2>
+    <p class="section-sub">Desenvolvido especificamente para escritórios contábeis. Sem funcionalidades genéricas, só o que importa.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <h3>Gestão de Tarefas</h3>
+        <p>Crie, atribua e acompanhe tarefas por setor com prazos e prioridades. Nunca mais perca um prazo fiscal.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Dashboard de Desempenho</h3>
+        <p>KPIs em tempo real, taxa de conclusão, ROI de produtividade e análise por funcionário e setor.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📰</div>
+        <h3>Feed Tributário Automático</h3>
+        <p>Notícias da Receita Federal e atualizações tributárias direto na sua tela. Sem precisar pesquisar.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚠️</div>
+        <h3>Alertas de Prazo</h3>
+        <p>Detecção automática de tarefas atrasadas com notificações para gestores e funcionários.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔐</div>
+        <h3>Segurança Bancária</h3>
+        <p>Criptografia bcrypt, autenticação JWT e proteção contra ataques. Seus dados de clientes protegidos.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <h3>Multi-usuário</h3>
+        <p>Admin e funcionários com acessos diferentes. Cada um vê só o que precisa ver.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="pricing" style="text-align:center">
+    <div class="section-tag">Planos</div>
+    <h2 class="section-title">Simples e transparente</h2>
+    <p class="section-sub" style="margin:0 auto 60px">Sem taxa de instalação. Cancele quando quiser.</p>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="price-name">Básico</div>
+        <div class="price-value">R$99<span>/mês</span></div>
+        <ul class="price-features">
+          <li>Até 5 funcionários</li>
+          <li>Gestão de tarefas</li>
+          <li>Dashboard básico</li>
+          <li>Feed de notícias</li>
+          <li>Suporte por email</li>
+        </ul>
+        <button class="btn-secondary" style="width:100%;padding:12px" onclick="openLogin()">Começar</button>
+      </div>
+      <div class="price-card featured">
+        <div class="price-tag">Mais popular</div>
+        <div class="price-name">Profissional</div>
+        <div class="price-value">R$199<span>/mês</span></div>
+        <ul class="price-features">
+          <li>Até 20 funcionários</li>
+          <li>Tudo do Básico</li>
+          <li>Dashboard avançado com KPIs</li>
+          <li>Relatórios de desempenho</li>
+          <li>Alertas automáticos</li>
+          <li>Suporte prioritário</li>
+        </ul>
+        <button class="btn-primary" style="width:100%;padding:12px" onclick="openLogin()">Começar</button>
+      </div>
+      <div class="price-card">
+        <div class="price-name">Enterprise</div>
+        <div class="price-value">R$499<span>/mês</span></div>
+        <ul class="price-features">
+          <li>Funcionários ilimitados</li>
+          <li>Tudo do Profissional</li>
+          <li>API dedicada</li>
+          <li>Onboarding personalizado</li>
+          <li>Suporte 24/7</li>
+        </ul>
+        <button class="btn-secondary" style="width:100%;padding:12px" onclick="openLogin()">Falar com vendas</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="contato" style="text-align:center">
+    <div class="section-tag">Contato</div>
+    <h2 class="section-title">Fale com nosso time</h2>
+    <p class="section-sub" style="margin:0 auto 48px">Quer saber mais sobre a GestaCont? Nossa equipe de vendas responde em até 24 horas.</p>
+    <form action="https://formspree.io/f/mlgarbwa" method="POST" style="max-width:480px;margin:0 auto" onsubmit="enviarContato(event, this)">
+      <div class="form-group" style="text-align:left">
+        <label>Nome completo</label>
+        <input type="text" name="nome" placeholder="Seu nome" required style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--text);font-family:'DM Sans';font-size:0.95rem;width:100%;outline:none">
+      </div>
+      <div class="form-group" style="text-align:left">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="email@escritorio.com.br" required style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--text);font-family:'DM Sans';font-size:0.95rem;width:100%;outline:none">
+      </div>
+      <div class="form-group" style="text-align:left">
+        <label>Telefone / WhatsApp</label>
+        <input type="text" name="telefone" placeholder="(27) 99999-9999" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--text);font-family:'DM Sans';font-size:0.95rem;width:100%;outline:none">
+      </div>
+      <div class="form-group" style="text-align:left">
+        <label>Plano de interesse</label>
+        <select name="plano" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--text);font-family:'DM Sans';font-size:0.95rem;width:100%;outline:none">
+          <option value="basico">Básico — R$99/mês</option>
+          <option value="profissional" selected>Profissional — R$199/mês</option>
+          <option value="enterprise">Enterprise — R$499/mês</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-primary" style="width:100%;margin-top:8px" id="btnEnviar">Falar com vendas</button>
+      <p id="msgSucesso" style="display:none;color:var(--accent);margin-top:16px;font-size:0.9rem">✓ Mensagem enviada! Retornaremos em breve.</p>
+    </form>
+  </section>
+
+  <footer>
+    <div class="logo">Gesta<span style="color:var(--accent)">Cont</span></div>
+    <p>© 2026 GestaCont · Gestão inteligente para escritórios contábeis</p>
+  </footer>
+
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closeLogin()">✕</button>
+    <h2>Bem-vindo de volta</h2>
+    <p>Acesse sua conta GestaCont</p>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="email@escritorio.com.br">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="loginSenha" placeholder="••••••••">
+    </div>
+    <button class="btn-full" onclick="fazerLogin()">Entrar</button>
+    <p style="text-align:center;margin-top:16px;font-size:0.85rem">
+      Não tem conta? <a href="#" style="color:var(--accent);text-decoration:none" onclick="closeLogin()">Fale conosco</a>
+    </p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div class="grid-bg"></div>
+  <nav class="dash-nav">
+    <div class="logo">Gesta<span style="color:var(--accent)">Cont</span></div>
+    <div style="display:flex;align-items:center;gap:20px">
+      <span style="color:var(--muted);font-size:0.85rem" id="empresaNome"></span>
+      <button onclick="sair()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:6px 16px;border-radius:6px;cursor:pointer;font-family:'DM Sans'">Sair</button>
+    </div>
+  </nav>
+
+  <div class="dash-content">
+    <div class="dash-header">
+      <h2>Dashboard</h2>
+      <p id="dataAtual"></p>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Total de Tarefas</div>
+        <div class="kpi-value" style="color:var(--text)">24</div>
+        <div class="kpi-change up">↑ 12% este mês</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Concluídas</div>
+        <div class="kpi-value" style="color:var(--accent)">18</div>
+        <div class="kpi-change up">↑ 75% taxa de conclusão</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Atrasadas</div>
+        <div class="kpi-value" style="color:var(--danger)">3</div>
+        <div class="kpi-change down">↓ Atenção necessária</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Funcionários Ativos</div>
+        <div class="kpi-value" style="color:var(--accent2)">8</div>
+        <div class="kpi-change up">↑ 100% ativos</div>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="dash-card">
+        <h3>Desempenho por Funcionário <span>Este mês</span></h3>
+        <div class="perf-item">
+          <div class="perf-header"><span>Ana Lima · Fiscal</span><span style="color:var(--accent)">92%</span></div>
+          <div class="perf-bar"><div class="perf-fill" style="width:92%"></div></div>
+        </div>
+        <div class="perf-item">
+          <div class="perf-header"><span>Carlos Souza · Contábil</span><span style="color:var(--accent)">85%</span></div>
+          <div class="perf-bar"><div class="perf-fill" style="width:85%"></div></div>
+        </div>
+        <div class="perf-item">
+          <div class="perf-header"><span>Marina Costa · DP</span><span style="color:var(--warning)">68%</span></div>
+          <div class="perf-bar"><div class="perf-fill medium" style="width:68%"></div></div>
+        </div>
+        <div class="perf-item">
+          <div class="perf-header"><span>Pedro Alves · Fiscal</span><span style="color:var(--danger)">42%</span></div>
+          <div class="perf-bar"><div class="perf-fill low" style="width:42%"></div></div>
+        </div>
+      </div>
+
+      <div class="dash-card">
+        <h3>Tarefas Recentes <span>Ver todas</span></h3>
+        <div class="tarefa-item">
+          <div class="tarefa-status done"></div>
+          <div class="tarefa-name">SPED Fiscal - Cliente ABC</div>
+          <div class="tarefa-meta">Concluída</div>
+        </div>
+        <div class="tarefa-item">
+          <div class="tarefa-status pending"></div>
+          <div class="tarefa-name">DCTF Mensal</div>
+          <div class="tarefa-meta">Vence hoje</div>
+        </div>
+        <div class="tarefa-item">
+          <div class="tarefa-status late"></div>
+          <div class="tarefa-name">Conciliação Bancária</div>
+          <div class="tarefa-meta">Atrasada 2 dias</div>
+        </div>
+        <div class="tarefa-item">
+          <div class="tarefa-status done"></div>
+          <div class="tarefa-name">EFD Contribuições</div>
+          <div class="tarefa-meta">Concluída</div>
+        </div>
+        <div class="tarefa-item">
+          <div class="tarefa-status pending"></div>
+          <div class="tarefa-name">Folha de Pagamento</div>
+          <div class="tarefa-meta">Vence em 3 dias</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-card">
+      <h3>Notícias Tributárias <span>Atualizado automaticamente</span></h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:0 32px">
+        <div class="noticia-item">
+          <div class="noticia-fonte">Receita Federal</div>
+          <div class="noticia-titulo">Prazo para entrega da ECF 2026 é definido para julho</div>
+          <div class="noticia-data">Hoje, 10:32</div>
+        </div>
+        <div class="noticia-item">
+          <div class="noticia-fonte">Contábeis.com.br</div>
+          <div class="noticia-titulo">Reforma tributária: CBS e IBS entram em vigor em 2027</div>
+          <div class="noticia-data">Ontem, 14:15</div>
+        </div>
+        <div class="noticia-item">
+          <div class="noticia-fonte">Portal Tributário</div>
+          <div class="noticia-titulo">Simples Nacional: novas alíquotas para serviços de TI</div>
+          <div class="noticia-data">12 abr, 09:00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Data atual
+  const dias = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const agora = new Date();
+  const dataEl = document.getElementById('dataAtual');
+  if(dataEl) dataEl.textContent = `${dias[agora.getDay()]}, ${agora.getDate()} de ${meses[agora.getMonth()]} de ${agora.getFullYear()}`;
+
+  function openLogin() {
+    document.getElementById('loginModal').classList.add('active');
+  }
+
+  function closeLogin() {
+    document.getElementById('loginModal').classList.remove('active');
+  }
+
+  function showDemo() {
+    document.getElementById('empresaNome').textContent = 'Escritório Demo';
+    document.getElementById('landing').style.display = 'none';
+    document.getElementById('loginModal').classList.remove('active');
+    document.getElementById('dashboard').style.display = 'block';
+    animateBars();
+  }
+
+  function fazerLogin() {
+    const email = document.getElementById('loginEmail').value;
+    const senha = document.getElementById('loginSenha').value;
+
+    if(!email || !senha) {
+      alert('Preencha email e senha');
+      return;
+    }
+
+    // Conecta com o backend real
+    fetch('https://web-production-65844.up.railway.app/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, senha })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if(data.token) {
+        localStorage.setItem('token', data.token);
+        document.getElementById('empresaNome').textContent = email;
+        document.getElementById('landing').style.display = 'none';
+        document.getElementById('loginModal').classList.remove('active');
+        document.getElementById('dashboard').style.display = 'block';
+        animateBars();
+      } else {
+        alert('Email ou senha incorretos');
+      }
+    })
+    .catch(() => {
+      // Se backend não tiver rodando, mostra demo
+      showDemo();
+    });
+  }
+
+  function sair() {
+    localStorage.removeItem('token');
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('landing').style.display = 'block';
+  }
+
+  function animateBars() {
+    setTimeout(() => {
+      document.querySelectorAll('.perf-fill').forEach(bar => {
+        const w = bar.style.width;
+        bar.style.width = '0';
+        setTimeout(() => bar.style.width = w, 100);
+      });
+    }, 300);
+  }
+
+  function enviarContato(e, form) {
+    e.preventDefault();
+    const btn = document.getElementById('btnEnviar');
+    btn.textContent = 'Enviando...';
+    btn.disabled = true;
+    fetch(form.action, {
+      method: 'POST',
+      body: new FormData(form),
+      headers: { 'Accept': 'application/json' }
+    }).then(r => {
+      if(r.ok) {
+        form.reset();
+        btn.style.display = 'none';
+        document.getElementById('msgSucesso').style.display = 'block';
+      } else {
+        btn.textContent = 'Erro. Tente novamente.';
+        btn.disabled = false;
+      }
+    }).catch(() => {
+      btn.textContent = 'Erro. Tente novamente.';
+      btn.disabled = false;
+    });
+  }
+
+  // Fechar modal clicando fora
+  document.getElementById('loginModal').addEventListener('click', function(e) {
+    if(e.target === this) closeLogin();
+  });
+</script>
+</body>
+</html>
