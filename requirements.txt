@@ -8,3 +8,4 @@ feedparser
 pydantic
 python-multipart
 bcrypt
+psycopg2-binary
