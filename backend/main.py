@@ -18,6 +18,10 @@ from database.models import Empresa, Funcionario, Tarefa
 from backend.security import criptografar_senha, verificar_senha
 from backend.auth import criar_token, verificar_token
 
+from database.models import Base
+from database.connection import engine
+Base.metadata.create_all(bind=engine)
+
 limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
 app.state.limiter = limiter
